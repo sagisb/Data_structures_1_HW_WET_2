@@ -13,6 +13,10 @@
 #ifndef DSPOTIFY25SPRING_WET2_H_
 #define DSPOTIFY25SPRING_WET2_H_
 
+#pragma once
+
+#include "HashTable.h"
+#include "GenreUnionFind.h"
 #include "wet2util.h"
 
 class DSpotify {
@@ -20,6 +24,9 @@ private:
     //
     // Here you may add anything you want
     //
+    GenreUnionFind genreUnionFind;
+    //HashTable<int, SongInfo> songsTable;
+    HashTable<int, int> genresTable;
     
 public:
     // <DO-NOT-MODIFY> {

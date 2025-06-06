@@ -1,3 +1,5 @@
+#include "GenreNode.cpp"
+#include <new>
 class GenreUnionFind {
 public:
     struct FindResult {
@@ -21,7 +23,6 @@ private:
     GenreNode* nodes;
     int capacity;
     int size;
-
     // Returns true on success, false on allocation failure.
     bool resize();
 };

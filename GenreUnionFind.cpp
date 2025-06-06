@@ -1,3 +1,4 @@
+#include "GenreUnionFind.h"
 GenreUnionFind::GenreUnionFind() : capacity(6007), size(0) {
     nodes = new (std::nothrow) GenreNode[capacity];
     if (nodes == nullptr) {
@@ -56,37 +57,37 @@ void GenreUnionFind::union_sets(int unionFindIndex1, int unionFindIndex2, int ne
     int rep2_idx = find_set(unionFindIndex2).representative_idx;
 
     if (rep1_idx == rep2_idx) {
-        nodes[rep1_idx].actual_genreId = newGenreId;
+        nodes[rep1_idx].genreId = newGenreId;
         return;
     }
 
     if (nodes[rep1_idx].rank < nodes[rep2_idx].rank) {
         nodes[rep1_idx].parent = rep2_idx;
-        nodes[rep2_idx].song_count += nodes[rep1_idx].song_count;
-        nodes[rep2_idx].actual_genreId = newGenreId;
+        nodes[rep2_idx].songCount += nodes[rep1_idx].songCount;
+        nodes[rep2_idx].genreId = newGenreId;
         nodes[rep1_idx].changes_to_parent = 1;
     } else if (nodes[rep1_idx].rank > nodes[rep2_idx].rank) {
         nodes[rep2_idx].parent = rep1_idx;
-        nodes[rep1_idx].song_count += nodes[rep2_idx].song_count;
-        nodes[rep1_idx].actual_genreId = newGenreId;
+        nodes[rep1_idx].songCount += nodes[rep2_idx].songCount;
+        nodes[rep1_idx].genreId = newGenreId;
         nodes[rep2_idx].changes_to_parent = 1;
     } else {
         nodes[rep2_idx].parent = rep1_idx;
-        nodes[rep1_idx].song_count += nodes[rep2_idx].song_count;
-        nodes[rep1_idx].actual_genreId = newGenreId;
+        nodes[rep1_idx].songCount += nodes[rep2_idx].songCount;
+        nodes[rep1_idx].genreId = newGenreId;
         nodes[rep2_idx].changes_to_parent = 1;
         nodes[rep1_idx].rank++;
     }
 }
 
 int GenreUnionFind::get_song_count(int representative_idx) const {
-    return nodes[representative_idx].song_count;
+    return nodes[representative_idx].songCount;
 }
 
 void GenreUnionFind::increment_song_count(int representative_idx) {
-    nodes[representative_idx].song_count++;
+    nodes[representative_idx].songCount++;
 }
 
-int GenreUnionFind::get_actual_genreId(int representative_idx) const {
-    return nodes[representative_idx].actual_genreId;
+int GenreUnionFind::get_actual_genre_id(int representative_idx) const {
+    return nodes[representative_idx].genreId;
 }

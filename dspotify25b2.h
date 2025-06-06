@@ -17,6 +17,7 @@
 
 #include "HashTable.h"
 #include "GenreUnionFind.h"
+#include "SongNode.h"
 #include "wet2util.h"
 
 class DSpotify {
@@ -25,7 +26,7 @@ private:
     // Here you may add anything you want
     //
     GenreUnionFind genreUnionFind;
-    //HashTable<int, SongInfo> songsTable;
+    HashTable<int, SongNode> songsTable;
     HashTable<int, int> genresTable;
     
 public:

@@ -40,13 +40,13 @@ void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
     if (leader1 == leader2) return;
 
     if (songs[leader1].getChildrenCount() < songs[leader2].getChildrenCount()) {
-        songs[leader1].setParent(leader2); // Using setter
+        songs[leader1].setParent(leader2);
         int combinedCount = songs[leader2].getChildrenCount() + songs[leader1].getChildrenCount();
-        songs[leader2].setChildrenCount(combinedCount); // Using getter and setter
+        songs[leader2].setChildrenCount(combinedCount);
     } else {
-        songs[leader2].setParent(leader1); // Using setter
+        songs[leader2].setParent(leader1);
         int combinedCount = songs[leader1].getChildrenCount() + songs[leader2].getChildrenCount();
-        songs[leader1].setChildrenCount(combinedCount); // Using getter and setter
+        songs[leader1].setChildrenCount(combinedCount);
     }
 }
 void SongUnionFind::incrementLeaderChanges(int leader_uf_idx) {

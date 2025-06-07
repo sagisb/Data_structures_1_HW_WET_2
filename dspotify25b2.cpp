@@ -67,14 +67,18 @@ StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
         songsUF.setGenreIdPtr(leader2Idx, newGenre->getIdPtr());
     } else if (leader1Idx != -1 && leader2Idx != -1) {
         songsUF.unionSongs(leader1Idx, leader2Idx);
-        int final_leader = songsUF.findLeader(leader1Idx).leader_uf_idx;
-        newGenre->setLeadingSongUFIdx(final_leader);
-        songsUF.setGenreIdPtr(final_leader, newGenre->getIdPtr());
+        int finalLeader = songsUF.findLeader(leader1Idx).leader_uf_idx;
+        newGenre->setLeadingSongUFIdx(finalLeader);
+        songsUF.setGenreIdPtr(finalLeader, newGenre->getIdPtr());
     }
 
     newGenre->setSongCount(g1->getSongCount() + g2->getSongCount());
-    genresTable.remove(genreId1);
-    genresTable.remove(genreId2);
+    g1->setSongCount(0);
+    g1->setLeadingSongUFIdx(-1);
+
+    g2->setSongCount(0);
+    g2->setLeadingSongUFIdx(-1);
+    //we can create a function that reset the genre
     return StatusType::SUCCESS;
 }
 
@@ -83,10 +87,11 @@ output_t<int> DSpotify::getSongGenre(int songId){
     int* ufIndexPtr = songsTable.find(songId);
     if (ufIndexPtr == nullptr) return StatusType::FAILURE;
 
-    SongUnionFind::FindResult res = songsUF.findLeader(*ufIndexPtr);
-    int* genreIdPtr = songsUF.getGenreIdPtr(res.leader_uf_idx);
 
-    if (genreIdPtr == nullptr) return StatusType::FAILURE;
+    int leaderIndex = songsUF.findLeader(*ufIndexPtr).leader_uf_idx;
+    int* genreIdPtr = songsUF.getGenreIdPtr(leaderIndex);
+
+    if (genreIdPtr == nullptr) return output_t<int>(StatusType::FAILURE);
     return output_t<int>(*genreIdPtr);
 }
 
@@ -102,6 +107,5 @@ output_t<int> DSpotify::getNumberOfGenreChanges(int songId){
     int* ufIndexPtr = songsTable.find(songId);
     if (ufIndexPtr == nullptr) return output_t<int>(StatusType::FAILURE);
 
-    SongUnionFind::FindResult res = songsUF.findLeader(*ufIndexPtr);
-    return output_t<int>(1 + res.total_changes);
+    return output_t<int>(1 + songsUF.findLeader(*ufIndexPtr).total_changes);
 }

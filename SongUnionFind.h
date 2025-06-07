@@ -3,7 +3,7 @@
 
 class SongUnionFind {
 public:
-    struct FindResult { int leader_uf_idx; int total_changes; };
+    struct FindResult { int leader_uf_idx; int total_changes; int distance_to_leader;};
     SongUnionFind();
     ~SongUnionFind();
     int addSong(int* genreIdPtr);

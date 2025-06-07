@@ -27,11 +27,23 @@ int SongUnionFind::addSong(int* genreIdPtr) {
 }
 SongUnionFind::FindResult SongUnionFind::findLeader(int udIndex) {
     if (songs[udIndex].getParent() == udIndex) return {udIndex, 0};
-    FindResult res = findLeader(songs[udIndex].getParent());
-    songs[udIndex].setGenreChanges(songs[udIndex].getGenreChanges() + res.total_changes);
-    songs[udIndex].setParent(res.leader_uf_idx);
-    return {res.leader_uf_idx, songs[udIndex].getGenreChanges()};
+    FindResult parentResult = findLeader(songs[udIndex].getParent());
+    //FindResult res = findLeader(songs[udIndex].getParent());
+    songs[udIndex].setGenreChanges(songs[udIndex].getGenreChanges() + parentResult.distance_to_leader);
+
+    // Now, perform the path compression
+    songs[udIndex].setParent(parentResult.leader_uf_idx);
+
+    // Return the final result for the current node
+    return {
+            parentResult.leader_uf_idx,         // The final leader
+            songs[udIndex].getGenreChanges(),   // The NEW stored value at this node
+            1                                   // After compression, distance to leader is always 1
+    };
 }
+
+
+
 void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
     int leader1 = findLeader(uf_idx1).leader_uf_idx;
     int leader2 = findLeader(uf_idx2).leader_uf_idx;
@@ -40,13 +52,13 @@ void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
     if (songs[leader1].getChildrenCount() < songs[leader2].getChildrenCount()) {
         songs[leader1].setParent(leader2);
         songs[leader2].setChildrenCount(songs[leader2].getChildrenCount() + songs[leader1].getChildrenCount());
-        songs[leader1].setGenreIdPtr(nullptr);
-        songs[leader1].setGenreChanges(1);
+       // songs[leader1].setGenreIdPtr(nullptr);
+       // songs[leader1].setGenreChanges(1);
     } else {
         songs[leader2].setParent(leader1);
         songs[leader1].setChildrenCount(songs[leader1].getChildrenCount() + songs[leader2].getChildrenCount());
-        songs[leader2].setGenreIdPtr(nullptr);
-        songs[leader2].setGenreChanges(1);
+       // songs[leader2].setGenreIdPtr(nullptr);
+       // songs[leader2].setGenreChanges(1);
     }
 }
 int SongUnionFind::getChildrenCount(int leader_uf_idx) const { return songs[leader_uf_idx].getChildrenCount(); }

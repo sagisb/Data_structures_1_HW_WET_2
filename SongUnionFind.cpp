@@ -18,31 +18,21 @@ bool SongUnionFind::resize() {
     capacity = newCap;
     return true;
 }
-int SongUnionFind::addSong(int* genreIdPtr) {
+int SongUnionFind::addSong(int songId, int* genreIdPtr) {
     if (size == capacity) if (!resize()) return -1;
     int idx = size;
-    songs[idx].initAsLeader(idx, genreIdPtr);
+    songs[idx].initAsLeader(songId, idx, genreIdPtr);
     size++;
     return idx;
 }
 SongUnionFind::FindResult SongUnionFind::findLeader(int udIndex) {
-    if (songs[udIndex].getParent() == udIndex) return {udIndex, 0};
-    FindResult parentResult = findLeader(songs[udIndex].getParent());
-    //FindResult res = findLeader(songs[udIndex].getParent());
-    songs[udIndex].setGenreChanges(songs[udIndex].getGenreChanges() + parentResult.distance_to_leader);
-
-    // Now, perform the path compression
-    songs[udIndex].setParent(parentResult.leader_uf_idx);
-
-    // Return the final result for the current node
+    HelperResult helperResult = findHelper(udIndex);
     return {
-            parentResult.leader_uf_idx,         // The final leader
-            songs[udIndex].getGenreChanges(),   // The NEW stored value at this node
-            1                                   // After compression, distance to leader is always 1
+            helperResult.leader_idx,
+            songs[udIndex].getGenreChanges(),
+            helperResult.distance
     };
 }
-
-
 
 void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
     int leader1 = findLeader(uf_idx1).leader_uf_idx;
@@ -50,17 +40,41 @@ void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
     if (leader1 == leader2) return;
 
     if (songs[leader1].getChildrenCount() < songs[leader2].getChildrenCount()) {
-        songs[leader1].setParent(leader2);
-        songs[leader2].setChildrenCount(songs[leader2].getChildrenCount() + songs[leader1].getChildrenCount());
-       // songs[leader1].setGenreIdPtr(nullptr);
-       // songs[leader1].setGenreChanges(1);
+        songs[leader1].setParent(leader2); // Using setter
+        int combinedCount = songs[leader2].getChildrenCount() + songs[leader1].getChildrenCount();
+        songs[leader2].setChildrenCount(combinedCount); // Using getter and setter
     } else {
-        songs[leader2].setParent(leader1);
-        songs[leader1].setChildrenCount(songs[leader1].getChildrenCount() + songs[leader2].getChildrenCount());
-       // songs[leader2].setGenreIdPtr(nullptr);
-       // songs[leader2].setGenreChanges(1);
+        songs[leader2].setParent(leader1); // Using setter
+        int combinedCount = songs[leader1].getChildrenCount() + songs[leader2].getChildrenCount();
+        songs[leader1].setChildrenCount(combinedCount); // Using getter and setter
     }
 }
+void SongUnionFind::incrementLeaderChanges(int leader_uf_idx) {
+    if (leader_uf_idx != -1) {
+        int currentChanges = songs[leader_uf_idx].getGenreChanges();
+        songs[leader_uf_idx].setGenreChanges(currentChanges + 1);
+    }
+}
+
 int SongUnionFind::getChildrenCount(int leader_uf_idx) const { return songs[leader_uf_idx].getChildrenCount(); }
 int* SongUnionFind::getGenreIdPtr(int leader_uf_idx) const { return songs[leader_uf_idx].getGenreIdPtr(); }
 void SongUnionFind::setGenreIdPtr(int leader_uf_idx, int* new_ptr) { songs[leader_uf_idx].setGenreIdPtr(new_ptr); }
+SongUnionFind::HelperResult SongUnionFind::findHelper(int udIndex) {
+    int p_idx = songs[udIndex].getParent();
+    if (p_idx == udIndex) {
+        return {udIndex, 0};
+    }
+    HelperResult parentRes = findHelper(p_idx);
+    int leader = parentRes.leader_idx;
+    int distFromParentToLeader = parentRes.distance;
+    int myOldDist = 1 + distFromParentToLeader;
+
+    // Using getter and setter
+    int currentChanges = songs[udIndex].getGenreChanges();
+    songs[udIndex].setGenreChanges(currentChanges + myOldDist - 1);
+
+    // Using setter
+    songs[udIndex].setParent(leader);
+
+    return {leader, 1};
+}

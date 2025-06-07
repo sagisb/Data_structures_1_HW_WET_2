@@ -24,6 +24,9 @@ private:
     //
     // Here you may add anything you want
     //
+    SongUnionFind songsUF;
+    HashTable<int, int> songsTable;
+    HashTable<int, Genre> genresTable;
     
 public:
     // <DO-NOT-MODIFY> {

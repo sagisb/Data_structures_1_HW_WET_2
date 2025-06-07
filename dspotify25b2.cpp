@@ -23,7 +23,7 @@ StatusType DSpotify::addSong(int songId, int genreId) {
     if (genre == nullptr) return StatusType::FAILURE;
 
     // A pointer to the genreId field is passed to the song, which is now the leader.
-    int* genreIdFieldPtr = const_cast<int*>(&(genre->getId()));
+    int* genreIdFieldPtr = genre->getIdPtr();
     int newSongUfIdx = songsUF.addSong(genreIdFieldPtr);
     if (newSongUfIdx == -1) return StatusType::ALLOCATION_ERROR;
     if (!songsTable.insert(songId, newSongUfIdx)) return StatusType::ALLOCATION_ERROR;
@@ -38,40 +38,70 @@ StatusType DSpotify::addSong(int songId, int genreId) {
     return StatusType::SUCCESS;
 }
 
-StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int genreId3) {
-    if (genreId1 <= 0 || genreId2 <= 0 || genreId3 <= 0 || genreId1 == genreId2 ||
-        genreId1 == genreId3 || genreId2 == genreId3) {
+StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
+    if (genreId1 <= 0 || genreId2 <= 0 || newGenreId <= 0 || genreId1 == genreId2) {
         return StatusType::INVALID_INPUT;
     }
-    int *unionFindIndex1_ptr = genresTable.find(genreId1);
-    int *unionFindIndex2_ptr = genresTable.find(genreId2);
-    if (unionFindIndex1_ptr == nullptr || unionFindIndex2_ptr == nullptr) {
-        return StatusType::FAILURE;
-    } //We can split it up and save on searching
-    if (genresTable.find(genreId3) != nullptr) {
+    Genre* g1 = genresTable.find(genreId1);
+    Genre* g2 = genresTable.find(genreId2);
+    if (g1 == nullptr || g2 == nullptr) {
         return StatusType::FAILURE;
     }
-    genreUnionFind.union_sets(*unionFindIndex1_ptr, *unionFindIndex2_ptr, genreId3);
+    if (genresTable.find(newGenreId) != nullptr) {
+        return StatusType::FAILURE;
+    }
 
-    genresTable.remove(genreId1);
-    genresTable.remove(genreId2);
-
-    int new_rep_idx = genreUnionFind.find_set(*unionFindIndex1_ptr).representative_idx;
-    if (!genresTable.insert(genreId3, new_rep_idx)) {
+    if (!genresTable.insert(newGenreId, Genre(newGenreId))) {
         return StatusType::ALLOCATION_ERROR;
     }
+    Genre* newGenre = genresTable.find(newGenreId);
 
+    int leader1Idx = g1->getLeadingSongUFIdx();
+    int leader2Idx = g2->getLeadingSongUFIdx();
+
+    if (leader1Idx != -1 && leader2Idx == -1) {
+        newGenre->setLeadingSongUFIdx(leader1Idx);
+        songsUF.setGenreIdPtr(leader1Idx, newGenre->getIdPtr());
+    } else if (leader1Idx == -1 && leader2Idx != -1) {
+        newGenre->setLeadingSongUFIdx(leader2Idx);
+        songsUF.setGenreIdPtr(leader2Idx, newGenre->getIdPtr());
+    } else if (leader1Idx != -1 && leader2Idx != -1) {
+        songsUF.unionSongs(leader1Idx, leader2Idx);
+        int final_leader = songsUF.findLeader(leader1Idx).leader_uf_idx;
+        newGenre->setLeadingSongUFIdx(final_leader);
+        songsUF.setGenreIdPtr(final_leader, newGenre->getIdPtr());
+    }
+
+    newGenre->setSongCount(g1->getSongCount() + g2->getSongCount());
+    genresTable.remove(genreId1);
+    genresTable.remove(genreId2);
     return StatusType::SUCCESS;
 }
 
 output_t<int> DSpotify::getSongGenre(int songId){
-    return 0;
+    if (songId <= 0) return StatusType::INVALID_INPUT;
+    int* ufIndexPtr = songsTable.find(songId);
+    if (ufIndexPtr == nullptr) return StatusType::FAILURE;
+
+    SongUnionFind::FindResult res = songsUF.findLeader(*ufIndexPtr);
+    int* genreIdPtr = songsUF.getGenreIdPtr(res.leader_uf_idx);
+
+    if (genreIdPtr == nullptr) return StatusType::FAILURE;
+    return output_t<int>(*genreIdPtr);
 }
 
 output_t<int> DSpotify::getNumberOfSongsByGenre(int genreId){
-    return 0;
+    if (genreId <= 0) return output_t<int>(StatusType::INVALID_INPUT);
+    Genre* genre = genresTable.find(genreId);
+    if (genre == nullptr) return output_t<int>(StatusType::FAILURE);
+    return output_t<int>(genre->getSongCount());
 }
 
 output_t<int> DSpotify::getNumberOfGenreChanges(int songId){
-    return 0;
+    if (songId <= 0) return output_t<int>(StatusType::INVALID_INPUT);
+    int* ufIndexPtr = songsTable.find(songId);
+    if (ufIndexPtr == nullptr) return output_t<int>(StatusType::FAILURE);
+
+    SongUnionFind::FindResult res = songsUF.findLeader(*ufIndexPtr);
+    return output_t<int>(1 + res.total_changes);
 }

@@ -6,8 +6,8 @@ public:
     struct FindResult { int leader_uf_idx; int total_changes; };
     SongUnionFind();
     ~SongUnionFind();
-    int addSong(int* genre_id_ptr);
-    FindResult findLeader(int uf_idx);
+    int addSong(int* genreIdPtr);
+    FindResult findLeader(int udIndex);
     void unionSongs(int uf_idx1, int uf_idx2);
     int getChildrenCount(int leader_uf_idx) const;
     int* getGenreIdPtr(int leader_uf_idx) const;

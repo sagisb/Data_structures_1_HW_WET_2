@@ -14,6 +14,7 @@ public:
     int getId() const { return genreId; }
     int getSongCount() const { return songCount; }
     int getLeadingSongUFIdx() const { return leadingSongUFIdx; }
+    int* getIdPtr() { return &genreId; }
 
     // --- Setters ---
     void setSongCount(int count) { songCount = count; }

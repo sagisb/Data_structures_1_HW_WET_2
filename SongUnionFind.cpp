@@ -7,30 +7,30 @@ SongUnionFind::SongUnionFind() : capacity(10), size(0) {
 }
 SongUnionFind::~SongUnionFind() { delete[] songs; }
 bool SongUnionFind::resize() {
-    int new_cap = (capacity > 0) ? capacity * 2 : 10;
-    SongNode* new_nodes = new (std::nothrow) SongNode[new_cap];
-    if (new_nodes == nullptr) return false;
+    int newCap = (capacity > 0) ? capacity * 2 : 10;
+    SongNode* newNodes = new (std::nothrow) SongNode[newCap];
+    if (newNodes == nullptr) return false;
     for (int i = 0; i < size; ++i) {
-        new_nodes[i] = songs[i];
+        newNodes[i] = songs[i];
     }
     delete[] songs;
-    songs = new_nodes;
-    capacity = new_cap;
+    songs = newNodes;
+    capacity = newCap;
     return true;
 }
-int SongUnionFind::addSong(int* genre_id_ptr) {
+int SongUnionFind::addSong(int* genreIdPtr) {
     if (size == capacity) if (!resize()) return -1;
     int idx = size;
-    songs[idx].initAsLeader(idx, genre_id_ptr);
+    songs[idx].initAsLeader(idx, genreIdPtr);
     size++;
     return idx;
 }
-SongUnionFind::FindResult SongUnionFind::findLeader(int uf_idx) {
-    if (songs[uf_idx].getParent() == uf_idx) return {uf_idx, 0};
-    FindResult res = findLeader(songs[uf_idx].getParent());
-    songs[uf_idx].setGenreChanges(songs[uf_idx].getGenreChanges() + res.total_changes);
-    songs[uf_idx].setParent(res.leader_uf_idx);
-    return {res.leader_uf_idx, songs[uf_idx].getGenreChanges()};
+SongUnionFind::FindResult SongUnionFind::findLeader(int udIndex) {
+    if (songs[udIndex].getParent() == udIndex) return {udIndex, 0};
+    FindResult res = findLeader(songs[udIndex].getParent());
+    songs[udIndex].setGenreChanges(songs[udIndex].getGenreChanges() + res.total_changes);
+    songs[udIndex].setParent(res.leader_uf_idx);
+    return {res.leader_uf_idx, songs[udIndex].getGenreChanges()};
 }
 void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
     int leader1 = findLeader(uf_idx1).leader_uf_idx;

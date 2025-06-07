@@ -13,7 +13,11 @@
 #ifndef DSPOTIFY25SPRING_WET2_H_
 #define DSPOTIFY25SPRING_WET2_H_
 
+#pragma once
 #include "wet2util.h"
+#include "HashTable.h"
+#include "SongUnionFind.h"
+#include "Genre.h"
 
 class DSpotify {
 private:

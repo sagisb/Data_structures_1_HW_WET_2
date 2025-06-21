@@ -75,7 +75,9 @@ int SongUnionFind::getChildrenCount(int leader_uf_idx) const { return songs[lead
 
 int SongUnionFind::getGenreId(int leader_uf_idx) const { return songs[leader_uf_idx].getGenreId(); }
 
-void SongUnionFind::setGenreId(int leader_uf_idx, int new_id) { songs[leader_uf_idx].setGenreId(new_id); }
+void SongUnionFind::setGenreId(int leader_uf_idx, int new_id) {
+    songs[leader_uf_idx].setGenreId(new_id);
+}
 
 SongUnionFind::HelperResult SongUnionFind::findHelper(int ufIndex) {
     int parentIdx = songs[ufIndex].getParent();

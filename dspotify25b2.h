@@ -1,14 +1,14 @@
-// 
+//
 // 234218 Data Structures 1.
 // Semester: 2025B (Spring).
 // Wet Exercise #2.
-// 
+//
 // The following header file contains all methods we expect you to implement.
 // You MAY add private methods and fields of your own.
 // DO NOT erase or modify the signatures of the public methods.
 // DO NOT modify the preprocessors in this file.
 // DO NOT use the preprocessors in your other code files.
-// 
+//
 
 #ifndef DSPOTIFY25SPRING_WET2_H_
 #define DSPOTIFY25SPRING_WET2_H_
@@ -27,7 +27,14 @@ private:
     SongUnionFind songsUF;
     HashTable<int, int> songsTable;
     HashTable<int, Genre> genresTable;
-    
+    HashTable<int, int> leaderToGenre; // maps UF leader index -> genreId for uniqueness
+
+    // helper to associate a leader with a genre ensuring uniqueness
+    void mapLeaderToGenre(int leaderIdx, int genreId);
+
+    // helper to remove mapping if present
+    void unmapLeader(int leaderIdx);
+
 public:
     // <DO-NOT-MODIFY> {
     DSpotify();

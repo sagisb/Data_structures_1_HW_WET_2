@@ -8,29 +8,43 @@ DSpotify::DSpotify() = default;
 DSpotify::~DSpotify() = default;
 
 StatusType DSpotify::addGenre(int genreId) {
-    if (genreId <= 0) { return StatusType::INVALID_INPUT; }
-    if (genresTable.find(genreId) != nullptr) { return StatusType::FAILURE; }
+    if (genreId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+    if (genresTable.find(genreId) != nullptr) {
+        return StatusType::FAILURE;
+    }
     Genre newGenre(genreId);
-    if (!genresTable.insert(genreId, newGenre)) { return StatusType::ALLOCATION_ERROR; }
+    if (!genresTable.insert(genreId, newGenre)) {
+        return StatusType::ALLOCATION_ERROR;
+    }
     return StatusType::SUCCESS;
 }
 
 StatusType DSpotify::addSong(int songId, int genreId) {
-    if (songId <= 0 || genreId <= 0) { return StatusType::INVALID_INPUT; }
-    if (songsTable.find(songId) != nullptr) { return StatusType::FAILURE; }
+    if (songId <= 0 || genreId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+    if (songsTable.find(songId) != nullptr) {
+        return StatusType::FAILURE;
+    }
     Genre *genre = genresTable.find(genreId);
-    if (genre == nullptr) { return StatusType::FAILURE; }
+    if (genre == nullptr) {
+        return StatusType::FAILURE;
+    }
 
-    int *genreIdFieldPtr = genre->getIdPtr();
-    // The call to songsUF.addSong now passes the songId
-    int newSongUfIdx = songsUF.addSong(songId, genreIdFieldPtr);
-    if (newSongUfIdx == -1) { return StatusType::ALLOCATION_ERROR; }
-    if (!songsTable.insert(songId, newSongUfIdx)) { return StatusType::ALLOCATION_ERROR; }
+    // Add the song into Union-Find with its current genre id
+    int newSongUfIdx = songsUF.addSong(songId, genreId);
+    if (newSongUfIdx == -1) {
+        return StatusType::ALLOCATION_ERROR;
+    }
+    if (!songsTable.insert(songId, newSongUfIdx)) {
+        return StatusType::ALLOCATION_ERROR;
+    }
 
     if (genre->getLeadingSongUFIdx() == -1) {
         genre->setLeadingSongUFIdx(newSongUfIdx);
-    }
-    else {
+    } else {
         songsUF.unionSongs(genre->getLeadingSongUFIdx(), newSongUfIdx);
         int final_leader = songsUF.findLeader(newSongUfIdx).leader_uf_idx;
         genre->setLeadingSongUFIdx(final_leader);
@@ -64,18 +78,18 @@ StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
     if (leader1Idx != -1 && leader2Idx != -1) {
         songsUF.unionSongs(leader1Idx, leader2Idx);
         final_leader = songsUF.findLeader(leader1Idx).leader_uf_idx;
-    }
-    else if (leader1Idx != -1 && leader2Idx == -1) {
+    } else if (leader1Idx != -1 && leader2Idx == -1) {
         final_leader = songsUF.findLeader(leader1Idx).leader_uf_idx;
-    }
-    else if (leader1Idx == -1 && leader2Idx != -1) {
+    } else if (leader1Idx == -1 && leader2Idx != -1) {
         final_leader = songsUF.findLeader(leader2Idx).leader_uf_idx;
     }
+
+    // All songs in the resulting genre experienced exactly one additional change
     songsUF.incrementLeaderChanges(final_leader);
 
     if (final_leader != -1) {
         newGenre->setLeadingSongUFIdx(final_leader);
-        songsUF.setGenreIdPtr(final_leader, newGenre->getIdPtr());
+        songsUF.setGenreId(final_leader, newGenreId);
     }
     newGenre->setSongCount(g1->getSongCount() + g2->getSongCount());
 
@@ -88,36 +102,43 @@ StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
 }
 
 output_t<int> DSpotify::getSongGenre(int songId) {
-    if (songId <= 0) { return StatusType::INVALID_INPUT; }
+    if (songId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
     int *ufIndexPtr = songsTable.find(songId);
-    if (ufIndexPtr == nullptr) { return StatusType::FAILURE; }
-
+    if (ufIndexPtr == nullptr) {
+        return StatusType::FAILURE;
+    }
 
     int leaderIndex = songsUF.findLeader(*ufIndexPtr).leader_uf_idx;
-    int *genreIdPtr = songsUF.getGenreIdPtr(leaderIndex);
-
-    if (genreIdPtr == nullptr) { return output_t<int>(StatusType::FAILURE); }
-    return output_t<int>(*genreIdPtr);
+    int gid = songsUF.getGenreId(leaderIndex);
+    return output_t<int>(gid);
 }
 
 output_t<int> DSpotify::getNumberOfSongsByGenre(int genreId) {
-    if (genreId <= 0) { return output_t<int>(StatusType::INVALID_INPUT); }
+    if (genreId <= 0) {
+        return output_t<int>(StatusType::INVALID_INPUT);
+    }
     Genre *genre = genresTable.find(genreId);
-    if (genre == nullptr) { return output_t<int>(StatusType::FAILURE); }
+    if (genre == nullptr) {
+        return output_t<int>(StatusType::FAILURE);
+    }
     return output_t<int>(genre->getSongCount());
 }
 
 output_t<int> DSpotify::getNumberOfGenreChanges(int songId) {
-    if (songId <= 0) { return output_t<int>(StatusType::INVALID_INPUT); }
+    if (songId <= 0) {
+        return output_t<int>(StatusType::INVALID_INPUT);
+    }
     int *ufIndexPtr = songsTable.find(songId);
-    if (ufIndexPtr == nullptr) { return output_t<int>(StatusType::FAILURE); }
+    if (ufIndexPtr == nullptr) {
+        return output_t<int>(StatusType::FAILURE);
+    }
 
     SongUnionFind::FindResult res = songsUF.findLeader(*ufIndexPtr);
+    int leaderMerges = songsUF.getLeaderMerges(res.leader_uf_idx);
 
-    // This is the number of times the song's genre was MERGED.
-    // For a new song, this value is 0.
-    int totalChanges = res.stored_changes_at_node + res.distance_to_leader;
+    int totalChanges = leaderMerges - res.diff_to_leader + 1;
 
-    // We add 1 to account for the very first genre the song was created with.
     return output_t<int>(totalChanges);
 }

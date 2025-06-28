@@ -21,7 +21,8 @@ StatusType DSpotify::addGenre(int genreId) {
     return StatusType::SUCCESS;
 }
 
-StatusType DSpotify::addSong(int songId, int genreId) {
+StatusType DSpotify::addSong(int songId, int genreId) // TODO fix or remove hecks of invalid leading song
+{
     if (songId <= 0 || genreId <= 0) {
         return StatusType::INVALID_INPUT;
     }
@@ -43,16 +44,22 @@ StatusType DSpotify::addSong(int songId, int genreId) {
     }
 
     int leaderIdxStored = genre->getLeadingSongUFIdx();
+
+    // Validate cached leader once via helper
+    int validated = genre->validatedLeader(songsUF);
+
     if (leaderIdxStored != -1) {
-        // Validate that the stored index is still a root that represents the same genre
-        SongUnionFind::FindResult chk = songsUF.findLeader(leaderIdxStored);
-        if (chk.leader_uf_idx != leaderIdxStored || songsUF.getGenreId(leaderIdxStored) != genreId) {
-            // Outdated pointer – reset
+        if (validated == -1) {
+            // Cached pointer became invalid – remove mapping as well
             unmapLeader(leaderIdxStored);
-            leaderIdxStored = -1;
-            genre->setLeadingSongUFIdx(-1);
+        } else if (validated != leaderIdxStored) {
+            // Root changed: update mapping from old root to new root
+            unmapLeader(leaderIdxStored);
+            mapLeaderToGenre(validated, genreId);
         }
     }
+
+    leaderIdxStored = validated;
 
     if (leaderIdxStored == -1) {
         genre->setLeadingSongUFIdx(newSongUfIdx);
@@ -81,28 +88,31 @@ StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
         return StatusType::FAILURE;
     }
 
-    if (!genresTable.insert(newGenreId, Genre(newGenreId))) {
+    if (!genresTable.insert(newGenreId, Genre(newGenreId))) { // TODO: replace by addGenre
         return StatusType::ALLOCATION_ERROR;
     }
     Genre *newGenre = genresTable.find(newGenreId);
 
-    int leader1Idx = g1->getLeadingSongUFIdx();
-    int leader2Idx = g2->getLeadingSongUFIdx();
+    // Validate cached leaders using helper in Genre
+    int leader1Prev = g1->getLeadingSongUFIdx();
+    int leader2Prev = g2->getLeadingSongUFIdx();
 
-    auto validateLeaderEarly = [&](int idx, int expectedGenreId, Genre *g) -> int {
-        if (idx == -1)
-            return -1;
-        SongUnionFind::FindResult chk = songsUF.findLeader(idx);
-        if (chk.leader_uf_idx != idx || songsUF.getGenreId(idx) != expectedGenreId) {
-            unmapLeader(idx);
-            g->setLeadingSongUFIdx(-1);
-            return -1;
-        }
-        return idx;
-    };
+    int leader1Idx = g1->validatedLeader(songsUF);
+    int leader2Idx = g2->validatedLeader(songsUF);
 
-    leader1Idx = validateLeaderEarly(leader1Idx, genreId1, g1);
-    leader2Idx = validateLeaderEarly(leader2Idx, genreId2, g2);
+    if (leader1Prev != -1 && leader1Idx == -1) {
+        unmapLeader(leader1Prev);
+    } else if (leader1Prev != -1 && leader1Idx != leader1Prev && leader1Idx != -1) {
+        unmapLeader(leader1Prev);
+        mapLeaderToGenre(leader1Idx, genreId1);
+    }
+
+    if (leader2Prev != -1 && leader2Idx == -1) {
+        unmapLeader(leader2Prev);
+    } else if (leader2Prev != -1 && leader2Idx != leader2Prev && leader2Idx != -1) {
+        unmapLeader(leader2Prev);
+        mapLeaderToGenre(leader2Idx, genreId2);
+    }
 
     int final_leader = -1;
     if (leader1Idx != -1 && leader2Idx != -1) {
@@ -130,29 +140,6 @@ StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
     g1->setLeadingSongUFIdx(-1);
     g2->setSongCount(0);
     g2->setLeadingSongUFIdx(-1);
-
-    auto validateLeader = [&](int idx, int expectedGenreId) -> int {
-        if (idx == -1)
-            return -1;
-        // Must still be a root and belong to its genre
-        SongUnionFind::FindResult chk = songsUF.findLeader(idx);
-        if (chk.leader_uf_idx != idx || songsUF.getGenreId(idx) != expectedGenreId) {
-            return -1;
-        }
-        return idx;
-    };
-
-    leader1Idx = validateLeader(leader1Idx, genreId1);
-    if (leader1Idx == -1) {
-        unmapLeader(g1->getLeadingSongUFIdx());
-        g1->setLeadingSongUFIdx(-1);
-    }
-
-    leader2Idx = validateLeader(leader2Idx, genreId2);
-    if (leader2Idx == -1) {
-        unmapLeader(g2->getLeadingSongUFIdx());
-        g2->setLeadingSongUFIdx(-1);
-    }
 
     return StatusType::SUCCESS;
 }

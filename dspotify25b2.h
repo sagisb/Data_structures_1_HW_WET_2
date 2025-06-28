@@ -14,6 +14,7 @@
 #define DSPOTIFY25SPRING_WET2_H_
 
 #pragma once
+
 #include "wet2util.h"
 #include "HashTable.h"
 #include "SongUnionFind.h"
@@ -34,6 +35,9 @@ private:
 
     // helper to remove mapping if present
     void unmapLeader(int leaderIdx);
+
+    // Validate a genre's cached leader and update mapping accordingly.
+    int refreshGenreLeader(Genre *genre, int genreId);
 
 public:
     // <DO-NOT-MODIFY> {

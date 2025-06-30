@@ -1,5 +1,12 @@
 #pragma once
 
+/**
+ * Internal node stored inside `SongUnionFind`'s dynamic array.
+ *
+ * The invariants mirror those in classic weighted-quick-union with path
+ * compression, plus an extra `genreChanges` field that lets us answer
+ * "how many times did this song change genre?" in O(1) per query.
+ */
 class SongNode {
 private:
     int songId;

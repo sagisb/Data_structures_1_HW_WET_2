@@ -2,6 +2,7 @@
 
 #include <new>
 
+/** Simple 32-bit integer hasher */
 struct IntHasher {
     unsigned int operator()(int key) const {
         unsigned int k = static_cast<unsigned int>(key);
@@ -12,6 +13,9 @@ struct IntHasher {
     }
 };
 
+/**
+ * Minimal separate-chaining hash-table with rehash-on-75%-load.
+ */
 template<class K, class V, class H = IntHasher>
 class HashTable {
 private:

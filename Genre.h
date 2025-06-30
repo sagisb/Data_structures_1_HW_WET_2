@@ -1,5 +1,18 @@
 #pragma once
 
+/**
+ * Lightweight value-object that tracks per-genre metadata maintained by
+ * DSpotify.
+ *
+ * It intentionally stores *only* what the assignment requires:
+ *   • unique `genreId`  (positive integer)
+ *   • `songCount`       (number of songs currently belonging to this genre)
+ *   • cached UF index of the component leader (`leadingSongUFIdx`)
+ *
+ * `leadingSongUFIdx` is set to −1 when the genre has no songs or the cached
+ * pointer becomes invalid after merges.  Higher-level code is responsible for
+ * validating/refreshing it via `DSpotify::refreshGenreLeader`.
+ */
 class Genre {
 private:
     int genreId;

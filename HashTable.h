@@ -14,7 +14,7 @@ struct IntHasher {
 };
 
 /**
- * Minimal separate-chaining hash-table with rehash-on-75%-load.
+ * Minimal separate-chaining hash-table with resize-on-75%-load.
  */
 template<class K, class V, class H = IntHasher>
 class HashTable {
@@ -33,7 +33,7 @@ private:
         return h(key) % capacity;
     }
 
-    bool rehash() {
+    bool resize() {
         int old_capacity = capacity;
         Node **old_table = table;
         capacity = (capacity > 0) ? capacity * 2 : 11;
@@ -89,7 +89,7 @@ public:
         if (find(key) != nullptr)
             return false;
         if ((double) (size + 1) / capacity > 0.75) {
-            if (!rehash())
+            if (!resize())
                 return false;
         }
         int index = hash(key);

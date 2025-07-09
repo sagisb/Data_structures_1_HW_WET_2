@@ -14,7 +14,7 @@ struct IntHasher {
 };
 
 /**
- * Minimal separate-chaining hash-table with resize-on-75%-load.
+ * Minimal separate chaining hash table with resize on 75% load.
  */
 template<class K, class V, class H = IntHasher>
 class HashTable {

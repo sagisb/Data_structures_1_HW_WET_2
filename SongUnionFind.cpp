@@ -46,9 +46,7 @@ void SongUnionFind::unionSongs(int uf_idx1, int uf_idx2) {
 
     // Union by size (childrenCount)
     if (songs[leader1].getChildrenCount() < songs[leader2].getChildrenCount()) {
-        // Make leader2 the new leader
         songs[leader1].setParent(leader2);
-        // diff = parent.merges - my.merges
         int diff = songs[leader2].getGenreChanges() - songs[leader1].getGenreChanges();
         songs[leader1].setGenreChanges(diff);
         int combined = songs[leader2].getChildrenCount() + songs[leader1].getChildrenCount();

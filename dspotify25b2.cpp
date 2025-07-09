@@ -7,7 +7,7 @@ DSpotify::DSpotify() = default;
 
 DSpotify::~DSpotify() = default;
 
-// Helper to refresh a genre's cached leader pointer and maintain the leader->genre map.
+// Helper to refresh a genre's cached leader pointer and maintain the leader to genre map.
 int DSpotify::refreshGenreLeader(Genre *genre, int genreId) {
     int oldLeader = genre->getLeadingSongUFIdx();
     int newLeader = -1;
@@ -23,11 +23,11 @@ int DSpotify::refreshGenreLeader(Genre *genre, int genreId) {
 
     if (oldLeader != -1) {
         if (newLeader == -1) {
-            // Leader became invalid – remove mapping
+            // Leader became invalid, remove mapping
             unmapLeader(oldLeader);
             genre->setLeadingSongUFIdx(-1);
         } else if (newLeader != oldLeader) {
-            // Root changed – update mapping
+            // Root changed, update mapping
             unmapLeader(oldLeader);
             mapLeaderToGenre(newLeader, genreId);
         }
@@ -61,7 +61,7 @@ StatusType DSpotify::addSong(int songId, int genreId) {
         return StatusType::FAILURE;
     }
 
-    // Add the song into Union-Find with its current genre id
+    // Add the song into UnionFind with its current genre id
     int newSongUfIdx = songsUF.addSong(songId, genreId);
     if (newSongUfIdx == -1) {
         return StatusType::ALLOCATION_ERROR;
@@ -131,7 +131,7 @@ StatusType DSpotify::mergeGenres(int genreId1, int genreId2, int newGenreId) {
     g1->setSongCount(0);
     g2->setSongCount(0);
 
-    // After performing the merge, clear cached leaders and mappings of the old genres.
+    // After performing the merge, clear cached leaders and mappings of the old genres
     unmapLeader(g1->getLeadingSongUFIdx());
     unmapLeader(g2->getLeadingSongUFIdx());
     g1->setLeadingSongUFIdx(-1);

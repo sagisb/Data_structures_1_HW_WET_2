@@ -10,6 +10,11 @@ The core implementation is in:
 -   `SongNode.h` – the internal node structure used by the Union‑Find
 -   `Genre.h` – per‑genre metadata tracked by the system
 
+### References
+
+-   Assignment PDF: `DS_wet2_Spring_2025.pdf`
+-   Dry submission document: `dry_submission.pdf`
+
 ### What is DSpotify? (Context)
 
 DSpotify is a simplified music service backend that manages songs and genres over time. New genres can be created; songs are added to existing genres; and two existing genres can be merged into a new genre. After merges, every song that belonged to any merged genre is considered to have experienced one additional “genre change.”
@@ -87,22 +92,6 @@ Key features:
     -   Each non‑root node stores the difference `(parent.genreChanges - node.genreChanges)`.
     -   During `find` with path compression, distances accumulate and are stored on the node, enabling O(1) retrieval of its total difference to the root.
 
-Core fields in `SongNode`:
-
--   `songId` – the external song identifier
--   `parent` – index to parent in the UF array (root points to itself)
--   `genreChanges` – at root: total merges; at non‑root: difference to parent
--   `childrenCount` – subtree size at root, used for union by size
--   `genreId` – valid at root (current genre id of the component)
-
-Main methods in `SongUnionFind`:
-
--   `int addSong(int songId, int genreId)` – appends a new root node initialized with that genre.
--   `FindResult findLeader(int ufIndex)` – returns `{ leader_uf_idx, diff_to_leader }` and performs path compression while updating stored differences.
--   `void unionSongs(int a, int b)` – unions by size, re‑parents the smaller root to the larger, and adjusts `genreChanges` differences so the potential model stays consistent.
--   `void incrementLeaderChanges(int leader)` – increments the root’s merge counter to reflect a global genre change for that component.
--   `int getGenreId(int leader)` / `void setGenreId(int leader, int newId)` – read/write the root’s current genre id.
-
 How genre change counting works:
 
 -   After a merge of two genres into a new one, the system calls `incrementLeaderChanges(final_leader)` exactly once.
@@ -149,12 +138,7 @@ Behavior:
 -   When more songs are added, they are unioned into the cached leader’s component.
 -   On merges, the new genre’s leader is set to the resulting UF root; the old genres’ leaders are cleared and unmapped.
 
-Leader mapping helpers in `DSpotify`:
-
--   `refreshGenreLeader(Genre*, int genreId)` – validates a genre’s cached leader using UF `find`, fixes it if path compression changed the root, and updates `leaderToGenre`.
--   `mapLeaderToGenre(int leaderIdx, int genreId)` and `unmapLeader(int leaderIdx)` – maintain the uniqueness mapping `leader → genreId` and clear stale entries.
-
-### Operation Flow and Invariants
+### Operation Flow
 
 -   Adding a song:
 
